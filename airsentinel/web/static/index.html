@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AirSentinel Core — Kablosuz Çevre Güvenliği, Takipçi &amp; Drone Radarı</title>
+  
+  <!-- Apple Touch & PWA Settings for iPhone XR -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AirSentinel">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Üst Menü ve Sistem Durumu -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="m4.93 4.93 4.24 4.24"/>
+          <path d="m14.83 9.17 4.24-4.24"/>
+          <path d="M12 2v4"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+      <div>
+        <h1>AirSentinel Core</h1>
+        <div style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">
+          KABLOSUZ ÇEVRE GÜVENLİĞİ · GİZLİ TAKİPÇİ (AIRTAG) &amp; DRONE TESPİT SİSTEMİ
+        </div>
+      </div>
+    </div>
+
+    <div class="system-status" style="flex-wrap: wrap;">
+      <div class="badge" title="Apple Silicon (MacBook Air M2 / Mac) üzerindeki Bluetooth ve Wi-Fi tarayıcı bağlantısı">
+        <span class="badge-dot" id="wsStatusDot"></span>
+        <span id="wsStatusText">BAĞLANIYOR</span>
+      </div>
+      <div class="badge" title="Ev Halkı (Güvenli) olarak işaretlenmiş cihaz sayısı">
+        <span>🏠 EV HALKI:</span>
+        <strong style="color: var(--accent-color);" id="trustedCountBadge">0 CİHAZ</strong>
+      </div>
+      <button class="btn active" id="btnRoomAudit" title="Otel, bungalov veya ev için 5 aşamalı tam kapsamlı TSCM gizli kamera, takipçi ve ağ saldırısı denetimi başlatır">🏨 Oda Denetimi Başlat</button>
+      <button class="btn" id="btnTrustAll" title="Şu an evdeki mevcut tüm cihazları 'Ev Halkı (Güvenli)' olarak işaretler">🏠 Evdekileri Güvenli Kaydet</button>
+      <button class="btn" id="btnSentryMode" title="Açıldığında: Ev halkı listesinde olmayan yabancı bir telefon/cihaz yakına (-58 dBm) geldiğinde anında alarm çalar">🛡️ Bekçi Modu: KAPALI</button>
+      <button class="btn active" id="btnVoiceAlert" title="Kritik tehditlerde MacBook Air M2 hoparlöründen Türkçe sesli uyarı anonsu yapar">🗣️ Sesli Anons: AÇIK</button>
+      <button class="btn" id="btnDeepCamScan" title="Bağlı olduğun Wi-Fi ağındaki tüm IP'leri uyandırır, ONVIF/UPnP/SSDP ve 10 kamera portunu tarar">📹 Ağda Gizli Kamera Tara</button>
+      <button class="btn" id="btnResetData" title="Geçmiş cihaz kayıtlarını temizler ve sıfırdan canlı tarama başlatır">🗑️ Listeyi Temizle</button>
+      <button class="btn" id="btnNightMode" title="Karanlık ortamda gözü yormayan kırmızı gece görüş teması">Gece Görüş Modu</button>
+    </div>
+  </header>
+
+  <!-- Sekmeler (Menü) -->
+  <nav class="tabs-nav">
+    <button class="tab-btn active" data-tab="radar">📡 1. Canlı Radar</button>
+    <button class="tab-btn" data-tab="spectrum">📋 2. Tüm Cihazlar</button>
+    <button class="tab-btn" data-tab="hunt">🎯 3. Sinyal Avcısı (Geiger)</button>
+    <button class="tab-btn" data-tab="sits">🔍 4. Ortam Karşılaştırma</button>
+    <button class="tab-btn" data-tab="drones">🛸 5. Drone Hava Sahası</button>
+    <button class="tab-btn" data-tab="alerts">🚨 6. Tehdit Uyarıları</button>
+    <button class="tab-btn" data-tab="debrief">🧠 7. Türkçe Durum Özeti</button>
+  </nav>
+
+  <main class="container">
+    <!-- Üst Özet Kartları -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-title">Çevredeki Kablosuz Cihazlar</span>
+        <span class="metric-val" id="metricTotal">0</span>
+        <span class="metric-sub">Şu an etrafında sinyal yayan toplam telefon, bilgisayar, kulaklık ve modem sayısı</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-title">Havadaki Dronelar (İHA)</span>
+        <span class="metric-val" style="color: var(--info-color);" id="metricDrones">0</span>
+        <span class="metric-sub">Yakın hava sahasında uçuş sinyali (Remote ID) yayan drone sayısı</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-title">Yakındaki Takip Cihazları</span>
+        <span class="metric-val" style="color: var(--warning-color);" id="metricTrackers">0</span>
+        <span class="metric-sub">Çevrede algılanan Apple AirTag, Samsung SmartTag, Tile veya Chipolo takip etiketi sayısı</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-title">Güvenlik ve Saldırı Uyarıları</span>
+        <span class="metric-val threat" id="metricThreats">0</span>
+        <span class="metric-sub">Gizli kamera, Sahte Wi-Fi (Evil Twin), Flipper Zero saldırısı veya takip şüphesi sayısı</span>
+      </div>
+    </div>
+
+    <!-- SEKME 1: CANLI RADAR -->
+    <section class="tab-pane active" id="tab-radar">
+      <div class="guide-banner">
+        <strong>💡 Bu Ekran Ne İşe Yarar? (Canlı Radar):</strong>
+        Merkezdeki nokta senin <strong>MacBook Air M2 / Mac</strong> bilgisayarındır. Dairenin merkezine yakın olan noktalar <strong>odanın/bungalovun içindeki (çok yakın)</strong> cihazları, dış halkaya yakın olanlar ise <strong>uzak</strong> cihazları gösterir. Sağdaki listeden <strong>herhangi bir cihazın üzerine tıklayarak</strong> risk puanını, sabit/hareketli profilini, tahmini metre mesafesini ve derin paket analizini görebilirsin.
+      </div>
+
+      <div class="radar-view-container">
+        <div class="radar-canvas-wrapper">
+          <canvas id="radarCanvas" width="460" height="460"></canvas>
+          <div class="radar-legend">
+            <div class="legend-item"><span class="legend-dot" style="background:#0df08a;"></span> Normal Cihaz (Telefon/PC/Modem)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#00d2ff;"></span> Drone (Hava Aracı)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#ffaa00;"></span> Takip Cihazı (AirTag vb.)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#ff3355;"></span> Tehdit / Siber Saldırı</div>
+          </div>
+        </div>
+
+        <div class="targets-panel">
+          <div class="panel-header">
+            <span>EN YAKIN CİHAZLAR (DETAY İÇİN TIKLA)</span>
+            <span style="font-size:0.72rem; color:var(--text-muted); font-family:var(--font-mono);">SIRALAMA: YAKINLIK</span>
+          </div>
+          <div class="device-list" id="radarTargetsList">
+            <!-- Dinamik doldurulur -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEKME 2: TÜM CİHAZLAR -->
+    <section class="tab-pane" id="tab-spectrum">
+      <div class="guide-banner">
+        <strong>💡 Bu Ekran Ne İşe Yarar? (Tüm Cihazlar ve Sinyal Çözücü):</strong>
+        Etrafındaki tüm Wi-Fi ve Bluetooth cihazlarının tam listesidir. Sistem, cihazların havaya yaydığı görünmez paketleri açarak <strong>cihazın türünü</strong> (Telefon, Bilgisayar, AirTag, Kamera, Modem), <strong>risk puanını (0-100)</strong>, <strong>sabit/hareketli durumunu</strong> ve <strong>o anki telemetrisini</strong> otomatik olarak Türkçe etiketlerle gösterir.
+      </div>
+
+      <div class="targets-panel" style="max-height: none;">
+        <div class="panel-header" style="flex-wrap: wrap; gap: 8px;">
+          <span>KEŞFEDİLEN TÜM KABLOSUZ CİHAZLAR (WI-FI &amp; BLUETOOTH)</span>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="text" id="searchInput" class="btn" placeholder="🔍 Cihaz, kimlik veya durum ara..." style="cursor:text; min-width:210px; padding:4px 8px;" />
+            <select id="classFilter" class="btn" style="padding: 4px 8px;">
+              <option value="ALL">Tüm Cihaz Türlerini Göster</option>
+              <option value="HIGH_RISK">🔥 Sadece Yüksek Riskli / Şüpheli Cihazlar</option>
+              <option value="STATIONARY">📌 Sadece Sabit / Yerleştirilmiş Cihazlar</option>
+              <option value="TRUSTED">🏠 Sadece Ev Halkı (Güvenli Cihazlar)</option>
+              <option value="UNTRUSTED">❓ Sadece Yabancı / Tanınmayan Cihazlar</option>
+              <option value="BOOKMARKED">★ Sadece İzlemeye Alınanlar (Favoriler)</option>
+              <option value="PHONE">📱 Sadece Telefonlar</option>
+              <option value="PC">💻 Sadece Bilgisayarlar</option>
+              <option value="TRACKER">📍 Sadece Takip Cihazları (AirTag/SmartTag/Tile)</option>
+              <option value="DRONE">🛸 Sadece Dronelar</option>
+              <option value="WEARABLE">⌚ Kulaklık / Akıllı Saatler</option>
+              <option value="INFRASTRUCTURE">📡 Modem / Wi-Fi Ağları</option>
+              <option value="IOT">🏠 Akıllı Ev / Sensör / Ağ Cihazı</option>
+              <option value="SURVEILLANCE">📹 Kameralar / Gözetleme</option>
+              <option value="ATTACK_TOOL">🚨 Saldırı Araçları (Flipper vb.)</option>
+            </select>
+            <a href="/api/export/wigle" download class="btn" style="text-decoration:none;">CSV İndir (Excel)</a>
+            <a href="/api/export/kml" download class="btn" style="text-decoration:none;">Google Earth (KML) İndir</a>
+          </div>
+        </div>
+        <div class="device-list" id="spectrumList">
+          <!-- Dinamik doldurulur -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SEKME 3: SİNYAL AVCISI (GEIGER SAYACI) -->
+    <section class="tab-pane" id="tab-hunt">
+      <div class="guide-banner">
+        <strong>💡 Bu Ekran Ne İşe Yarar? (Sinyal Avcısı / Fiziksel Yön Bulucu):</strong>
+        Odada veya çantanda nereye saklandığını bilmediğin bir cihazı (örneğin şüpheli bir <strong>AirTag</strong>, kayıp bir <strong>AirPods</strong> veya gizli bir cihaz) bulmak için kullanılır. Yukarıdaki kutudan hedef cihazı seç ve <strong>"Geiger Sesini Aç"</strong> butonuna bas. Cihaza yaklaştıkça çubuk dolar, ekranda <strong>"YAKLAŞIYORSUN / ÇOK YAKIN"</strong> yazar ve tıpkı dedektör gibi <strong>bip sesi hızlanır</strong>.
+      </div>
+
+      <div class="targets-panel" style="max-height: none;">
+        <div class="panel-header" style="flex-wrap: wrap; gap: 8px;">
+          <span>FİZİKSEL CİHAZ BULUCU (GEIGER DEDEKTÖR MODU)</span>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select id="huntTargetSelect" class="btn" style="min-width: 280px;">
+              <option value="">-- Aranacak Cihazı Seçin --</option>
+            </select>
+            <button class="btn" id="btnGeigerAudio">🔊 Geiger Sesi: KAPALI</button>
+          </div>
+        </div>
+        <div class="hunt-box" id="huntBox">
+          <div class="hunt-status-row">
+            <div>
+              <div class="metric-title">TAKİP EDİLEN HEDEF CİHAZ</div>
+              <div class="hunt-target-title" id="huntTargetLabel">Henüz Hedef Seçilmedi (Yukarıdan Seçin)</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="metric-title">HAREKET YÖNLENDİRMESİ</div>
+              <span class="hunt-cue-badge" id="huntCueBadge">HEDEF BEKLENİYOR</span>
+            </div>
+          </div>
+
+          <div class="hunt-gauge-wrap">
+            <div class="hunt-gauge-bar" id="huntGaugeBar" style="width: 0%;"></div>
+          </div>
+
+          <div class="metrics-grid" style="margin-top: 16px; margin-bottom: 0;">
+            <div class="metric-card">
+              <span class="metric-title">Anlık Sinyal Gücü</span>
+              <span class="metric-val" id="huntSmoothedRssi">-- dBm</span>
+              <span class="metric-sub">-35 dBm çok yakın, -90 dBm çok uzak demektir</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-title">Yakınlık Yüzdesi</span>
+              <span class="metric-val" style="color: var(--accent-color);" id="huntProximityPct">0%</span>
+              <span class="metric-sub">%100'e yaklaştıkça cihaz hemen yanınızdadır</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-title">Son 5 Saniye Değişimi</span>
+              <span class="metric-val" id="huntDeltaDb">0.0 dB</span>
+              <span class="metric-sub">+ (Artı) değer yaklaştığınızı, - (Eksi) uzaklaştığınızı gösterir</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-title">Dedektör Bip Hızı</span>
+              <span class="metric-val" style="color: var(--info-color);" id="huntTickMs">-- ms</span>
+              <span class="metric-sub">Sayı küçüldükçe (90 ms) ses çok hızlı öter</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEKME 4: ORTAM KARŞILAŞTIRMA (SIT / SITDIFF) -->
+    <section class="tab-pane" id="tab-sits">
+      <div class="guide-banner">
+        <strong>💡 Bu Ekran Ne İşe Yarar? (Ortam Karşılaştırma — "Ben Yokken Kim Geldi?"):</strong>
+        Evden çıkarken veya gece yatarken <strong>"1. Ortam Kaydını Başlat"</strong> butonuna basıp mevcut cihazları kaydedersin. Döndüğünde ikinci bir kayıt alıp <strong>"İki Kaydı Karşılaştır"</strong> dediğinde sistem sana şu 3 bilgiyi verir:
+        1) <strong>Yeni Giren Yabancı Cihazlar</strong> (sonradan odaya/eve gelenler),
+        2) <strong>Ayrılan Cihazlar</strong> (ortamdan gidenler),
+        3) <strong>Sabit Kalan Cihazlar</strong> (evdeki normal cihazların).
+      </div>
+
+      <div class="targets-panel" style="max-height: none;">
+        <div class="panel-header" style="flex-wrap: wrap; gap: 8px;">
+          <span>ORTAM ANLIK GÖRÜNTÜSÜ (KAYIT) ALMA</span>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="text" id="sitLabelInput" class="btn" placeholder="Kayıt Adı (Örn: Sabah Evden Çıkarken)" style="cursor:text; min-width:240px;" />
+            <button class="btn active" id="btnStartSit">📸 Yeni Ortam Kaydı Al</button>
+          </div>
+        </div>
+        <div id="sitsListContainer" style="margin-bottom: 18px;"></div>
+
+        <div class="panel-header" style="border-top: 1px solid var(--border-color); padding-top: 14px; flex-wrap: wrap; gap: 8px;">
+          <span>İKİ KAYIT ARASINDAKİ FARKI BUL (ÖNCEKİ vs. SONRAKİ)</span>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select id="sitBaseSelect" class="btn"><option value="">1. Kayıt (Önceki)</option></select>
+            <span style="font-family:var(--font-mono); font-size:0.8rem;">ile</span>
+            <select id="sitTargetSelect" class="btn"><option value="">2. Kayıt (Sonraki)</option></select>
+            <button class="btn active" id="btnCompareSits">🔍 Farkı Göster</button>
+          </div>
+        </div>
+        <div id="sitDiffOutput"></div>
+      </div>
+    </section>
+
+    <!-- SEKME 5: DRONE HAVA SAHASI -->
+    <section class="tab-pane" id="tab-drones">
+      <div class="guide-banner">
+        <strong>💡 Bu Ekran Ne İşe Yarar? (Drone / İHA Hava Sahası Monitörü):</strong>
+        Yakınında uçan DJI, Autel, Skydio, Freefly gibi droneların yasal olarak yaydığı <strong>Remote ID</strong> radyo paketlerini yakalar. Drone'un <strong>marka/modelini, seri numarasını, yüksekliğini, hızını ve dronu uçuran pilotun yerde durduğu GPS koordinatını</strong> canlı olarak gösterir.
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+        <h2 style="font-size:1.05rem; text-transform:uppercase; color:var(--info-color); letter-spacing:1px;">
+          Hava Sahasındaki Dronelar ve Pilot Konumları
+        </h2>
+        <div style="display:flex; gap:8px;">
+          <a href="/api/export/gpx" download class="btn" style="text-decoration:none;">Uçuş Rotasını İndir (GPX)</a>
+          <a href="/api/export/kml" download class="btn" style="text-decoration:none;">Google Earth Haritası İndir (KML)</a>
+        </div>
+      </div>
+      <div class="drone-grid" id="dronesList">
+        <!-- Dinamik doldurulur -->
+      </div>
+    </section>
+
+    <!-- SEKME 6: TEHDİT UYARILARI -->
+    <section class="tab-pane" id="tab-alerts">
+      <div class="guide-banner">
+        <strong>💡 Bu Ekran Ne İşe Yarar? (Güvenlik ve Saldırı Uyarıları):</strong>
+        Evdeki normal telefon, bilgisayar ve modemler burada uyarı oluşturmaz. Burası yalnızca <strong>gerçek bir tehdit algılandığında</strong> (örneğin: birisi <strong>Flipper Zero</strong> ile Bluetooth saldırısı başlattığında, yabancı bir <strong>AirTag</strong> seni uzun süre takip ettiğinde veya yakınında <strong>Drone</strong> belirdiğinde) alarm kaydı tutar.
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 style="font-size:1.05rem; text-transform:uppercase; color:var(--danger-color); letter-spacing:1px;">
+          Tespit Edilen Güvenlik Uyarıları
+        </h2>
+      </div>
+      <div class="alerts-container" id="alertsList">
+        <!-- Dinamik doldurulur -->
+      </div>
+    </section>
+
+    <!-- SEKME 7: TÜRKÇE DURUM ÖZETİ (AI) -->
+    <section class="tab-pane" id="tab-debrief">
+      <div class="guide-banner">
+        <strong>💡 Bu Ekran Ne İşe Yarar? (Yapay Zeka Destekli Türkçe Güvenlik Özeti):</strong>
+        Sayılardan ve tablolardan uğraşmak istemiyorsan bu ekran senin içindir. Sistem etraftaki tüm sinyalleri analiz eder ve sana <strong>"Şu an ortam güvenli mi, şüpheli bir takip cihazı veya drone var mı, ne yapmalıyım?"</strong> sorularının cevabını sade bir Türkçe rapor olarak yazar.
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 style="font-size:1.05rem; text-transform:uppercase; color:var(--accent-color); letter-spacing:1px;">
+          Türkçe Çevresel Güvenlik Raporu (Mac mini M4 Analiz Motoru)
+        </h2>
+        <button class="btn active" id="btnRefreshDebrief">🔄 Raporu Yeniden Oluştur</button>
+      </div>
+      <div class="debrief-box" id="debriefOutput">Rapor hazırlanıyor...</div>
+    </section>
+  </main>
+
+  <!-- Cihaz Kimlik ve Adli İnceleme Penceresi (Modal) -->
+  <div class="modal-backdrop" id="deviceModal" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h3 id="modalTitle" style="color:var(--accent-color); font-family:var(--font-mono);">Cihaz Kimlik İncelemesi</h3>
+          <div id="modalSubtitle" style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);"></div>
+        </div>
+        <button class="btn" id="btnCloseModal">Kapat [ESC]</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" style="flex-wrap: wrap;">
+        <button class="btn" id="btnModalTrust">🏠 Ev Halkı (Güvenli) Yap</button>
+        <button class="btn" id="btnModalGatt">🔍 İçini Sorgula (GATT Model/Pil Oku)</button>
+        <button class="btn" id="btnModalBookmark">☆ İzlemeye Al (Favori)</button>
+        <button class="btn active" id="btnModalHunt">🎯 Bu Cihazın Yerini Bul (Geiger Sayacı)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Otel / Bungalov Oda Güvenlik Denetimi Karnesi Penceresi (Modal) -->
+  <div class="modal-backdrop" id="auditModal" style="display:none;">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="auditModalTitle" style="color:var(--accent-color); font-family:var(--font-mono);">🏨 Otel / Bungalov Oda Güvenlik Karnesi (TSCM)</h3>
+          <div id="auditModalSubtitle" style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);">5 Aşamalı Karşı-İstihbarat ve Ağ Denetimi</div>
+        </div>
+        <button class="btn" id="btnCloseAuditModal">Kapat [ESC]</button>
+      </div>
+      <div class="modal-body" id="auditModalBody"></div>
+      <div class="modal-footer" style="flex-wrap: wrap; justify-content: flex-end;">
+        <a href="/api/export/forensic-report" download="airsentinel-adli-kanit-raporu.html" class="btn active" style="text-decoration:none;">📄 Adli Kanıt Raporu İndir (SHA-256 Mühürlü)</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
