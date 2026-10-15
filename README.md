@@ -5,6 +5,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-WebSocket%20Telemetry-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Signatures](https://img.shields.io/badge/RF%20Signatures-6%2C973%20Rules%20(v94)-38bdf8?style=for-the-badge)
 ![Tests](https://img.shields.io/badge/Tests-48%2F48%20Passing-22c55e?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)
 
 **AirSentinel Core**, **MacBook Air M2** (taşınabilir saha kiti) ve **Mac mini M4** (sabit üs istasyonu) cihazlarının dahili **CoreWLAN (Wi-Fi)** ve **CoreBluetooth (BLE)** donanımını kullanarak çalışan; **sıfır harici anten/dongle, sıfır bulut bağımlılığı ve %100 yerel gizlilik** ilkesiyle tasarlanmış profesyonel bir **Karşı-İstihbarat (TSCM), Gizli Kamera Tespiti, Ağ Güvenliği (MITM Kalkanı) ve Çevre Koruma** platformudur.
 
@@ -79,7 +80,7 @@ Projeyi yeni bir MacBook Air M2'ye indirdiğinizde sanal ortam (`.venv`) ve tüm
 
 ```bash
 # 1. Repoyu klonlayın
-git clone git@github.com:yucel-gumus/airsentinel.git
+git clone https://github.com/yucel-gumus/airsentinel.git
 cd airsentinel
 
 # 2. Tek komutla başlatın (İlk çalışmada .venv ve paketleri otomatik kurar)
@@ -146,5 +147,13 @@ airsentinel/
 ├── tests/                         # 48 kapsamlı test paketi (v1..v5)
 ├── start.sh                       # Otomatik kurulumlu (self-bootstrapping) taşınabilir başlatıcı
 ├── run.py                         # Uvicorn / FastAPI giriş noktası
+├── LICENSE                        # MIT Açık Kaynak Lisansı
 └── requirements.txt               # Python bağımlılıkları
 ```
+
+---
+
+## 📜 Lisans
+
+Bu proje **MIT Lisansı** altında açık kaynak olarak sunulmaktadır. Ayrıntılar için [`LICENSE`](LICENSE) dosyasına bakabilirsiniz.
+
