@@ -6,6 +6,7 @@
 ![Signatures](https://img.shields.io/badge/RF%20Signatures-6%2C973%20Rules%20(v94)-38bdf8?style=for-the-badge)
 ![Tests](https://img.shields.io/badge/Tests-48%2F48%20Passing-22c55e?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)
+[![Developer](https://img.shields.io/badge/Geli%C5%9Ftirici-Y%C3%BCcel%20G%C3%BCm%C3%BC%C5%9F-0ea5e9?style=for-the-badge&logo=safari&logoColor=white)](https://yucelgumus.dev/)
 
 **AirSentinel Core**, **MacBook Air M2** (taşınabilir saha kiti) ve **Mac mini M4** (sabit üs istasyonu) cihazlarının dahili **CoreWLAN (Wi-Fi)** ve **CoreBluetooth (BLE)** donanımını kullanarak çalışan; **sıfır harici anten/dongle, sıfır bulut bağımlılığı ve %100 yerel gizlilik** ilkesiyle tasarlanmış profesyonel bir **Karşı-İstihbarat (TSCM), Gizli Kamera Tespiti, Ağ Güvenliği (MITM Kalkanı) ve Çevre Koruma** platformudur.
 
@@ -150,6 +151,14 @@ airsentinel/
 ├── LICENSE                        # MIT Açık Kaynak Lisansı
 └── requirements.txt               # Python bağımlılıkları
 ```
+
+---
+
+## 👨‍💻 Geliştirici & İletişim
+
+* **Geliştirici:** **Yücel Gümüş** (*Software Developer*)
+* **Web Sitesi:** [https://yucelgumus.dev/](https://yucelgumus.dev/)
+* **GitHub:** [@yucel-gumus](https://github.com/yucel-gumus)
 
 ---
 
